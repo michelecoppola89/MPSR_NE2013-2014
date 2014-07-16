@@ -16,7 +16,7 @@ public class Simulation {
 	public static int frontEndRequestsNumber = 0;
 	public static int backEndRequestsNumber = 0;
 	public static int completedSessions = 0;
-
+	public static Session currentSession;
 	public static void main(String[] args) {
 
 		generator.plantSeeds(-1);
@@ -24,9 +24,6 @@ public class Simulation {
 
 		double nextCompletionTime = Double.MAX_VALUE;
 		double nextArrivalTime = Double.MAX_VALUE;
-
-		Session currentSession = null;
-
 		GetArrival();
 		nextArrivalTime = arrival;
 
@@ -41,8 +38,8 @@ System.out.println("Prossimo istante di arrivo ="+arrival);
 //if(currentSession!=null)
 //{
 //	System.out.println("Numero di sessioni nel front end ="+frontEndRequestsNumber);
-//}
-			nextCompletionTime = GetNextCompletionTime(currentSession);
+//}			
+nextCompletionTime = GetNextCompletionTime();
 			if (nextCompletionTime <= nextArrivalTime) {
 				systemClock.setNext(nextCompletionTime);
 			} else {
@@ -70,10 +67,11 @@ System.out.println("Prossimo istante di arrivo ="+arrival);
 				sessionList.add(newSession);
 
 				if (systemClock.getCurrent() < stop) {
-					GetArrival();
-					nextArrivalTime = arrival;
+					
+					nextArrivalTime = GetArrival();
 				} else {
 					nextArrivalTime = Double.MAX_VALUE;
+					break;
 				}
 
 			} else if (currentSession!=null && systemClock.getCurrent() == currentSession
@@ -126,7 +124,8 @@ System.out.println("Prossimo istante di arrivo ="+arrival);
 
 	}
 
-	public static double GetNextCompletionTime(Session currentSession) {
+	public static double GetNextCompletionTime() {
+		
 
 		if (sessionList.size() > 0) {
 
@@ -139,13 +138,15 @@ System.out.println("Prossimo istante di arrivo ="+arrival);
 					currentSession = sessionList.get(i);
 				}
 			}
-
+			
 			return ret;
 
 		} else {
 			currentSession = null;
 			return Double.MAX_VALUE;
+			
 		}
+		
 
 	}
 
