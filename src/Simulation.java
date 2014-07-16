@@ -7,7 +7,7 @@ public class Simulation {
 
 	public static Rngs generator = new Rngs();
 	public static double start = 0;
-	public static double stop = 0;
+	public static double stop = 1;
 	public static double arrival = 0;
 	public static ArrayList<Session> sessionList = new ArrayList<Session>();
 	public static Clock systemClock = new Clock();
@@ -31,28 +31,41 @@ public class Simulation {
 		nextArrivalTime = arrival;
 
 		while ((systemClock.getCurrent() <= stop) || (sessionList.size() != 0)) {
-
+System.out.println("Numero di sessioni presenti nel sistema ="+arrivedSessions);
+System.out.println("Numero di sessioni partite dal sistema ="+completedSessions);
+System.out.println("Numero di sessioni nel front end ="+frontEndRequestsNumber);
+System.out.println("Numero di sessioni nel back end ="+backEndRequestsNumber);
+System.out.println("Numero di sessioni in think time ="+(arrivedSessions-completedSessions-frontEndRequestsNumber-backEndRequestsNumber));
+System.out.println("Prossimo istante di completamento ="+nextCompletionTime);
+System.out.println("Prossimo istante di arrivo ="+arrival);
+//if(currentSession!=null)
+//{
+//	System.out.println("Numero di sessioni nel front end ="+frontEndRequestsNumber);
+//}
 			nextCompletionTime = GetNextCompletionTime(currentSession);
 			if (nextCompletionTime <= nextArrivalTime) {
 				systemClock.setNext(nextCompletionTime);
 			} else {
 				systemClock.setNext(nextArrivalTime);
 			}
-
+			System.out.println("Clock corrente ="+systemClock.getNext());
 			// aggiorno statistiche
 
 			systemClock.setCurrent(systemClock.getNext());
 
 			if (systemClock.getCurrent() == nextArrivalTime) {
+				System.out.println("STO PROCESSANDO UN ARRIVO");
 				arrivedSessions++;
 				frontEndRequestsNumber++;
 
 				Session newSession = new Session();
 				newSession.setArrivalTime(systemClock.getCurrent());
 				newSession.setRequestNumber(GetNewRequestsNumber());
+				System.out.println("Richieste assegnate alla sessione in corso "+newSession.getRequestNumber());
 				newSession
 						.setFrontEndCompletionTime(GetMaxFrontEndCompletionTime()
 								+ GetFrontEndService());
+				
 
 				sessionList.add(newSession);
 
@@ -63,8 +76,9 @@ public class Simulation {
 					nextArrivalTime = Double.MAX_VALUE;
 				}
 
-			} else if (systemClock.getCurrent() == currentSession
+			} else if (currentSession!=null && systemClock.getCurrent() == currentSession
 					.getFrontEndCompletionTime()) {
+				System.out.println("STO PROCESSANDO UN COMPLETAMENTO NEL FRONT END");
 				currentSession.setFrontEndCompletionTime(Double.MAX_VALUE);
 				currentSession
 						.setBackEndCompletionTime(GetMaxBACKEndCompletionTime()
@@ -73,9 +87,9 @@ public class Simulation {
 				backEndRequestsNumber++;
 
 				// nextCompletionTime=Double.MAX_VALUE;
-
-			} else if (systemClock.getCurrent() == currentSession
+			} else if (currentSession!=null && systemClock.getCurrent() == currentSession
 					.getBackEndCompletionTime()) {
+				System.out.println("STO PROCESSANDO UN COMPLETAMENTO NEL BACK END");
 
 				currentSession.setRequestNumber(currentSession
 						.getRequestNumber() - 1);
@@ -92,8 +106,9 @@ public class Simulation {
 					currentSession.setBackEndCompletionTime(Double.MAX_VALUE);
 				}
 
-			} else if (systemClock.getCurrent() == currentSession
+			} else if (currentSession!=null && systemClock.getCurrent() == currentSession
 					.getThinkTimeCompletionTime()) {
+				System.out.println("STO PROCESSANDO UN COMPLETAMENTO NEL THINK END");
 				currentSession.setThinkTimeCompletionTime(Double.MAX_VALUE);
 				currentSession
 						.setFrontEndCompletionTime(GetMaxFrontEndCompletionTime()
@@ -176,6 +191,7 @@ public class Simulation {
 	public static double GetArrival() {
 		generator.selectStream(0);
 		arrival += Exponential(0.028571429);
+		
 		return arrival;
 	}
 
@@ -203,7 +219,8 @@ public class Simulation {
 	}
 
 	public static double Exponential(double m) {
-		return (-m * Math.log(1 - generator.random()));
+		double temp=(-m * Math.log(1 - generator.random()));
+		return temp;//(-m * Math.log(1 - generator.random()));
 	}
 
 	public static int Equilikely(int a, int b) {

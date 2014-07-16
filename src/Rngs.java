@@ -146,7 +146,8 @@ class Rngs {
     if (x < 0) {
       Date now = new Date();
       x = now.getTime();
-//      x = ((unsigned long) time((time_t *) NULL)) % MODULUS;
+      //x = ((unsigned long) time((time_t *) NULL)) % MODULUS;
+      x=x%MODULUS;// AGGIUNTA DA ME
     }
     if (x == 0)
       while (!ok) {
