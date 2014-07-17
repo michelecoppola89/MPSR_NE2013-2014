@@ -4,7 +4,7 @@ public class Simulation {
 
 	public static Rngs generator = new Rngs();
 	public static double start = 0;
-	public static double stop = 50;
+	public static double stop = 100;
 	public static double arrival = 0;
 	public static ArrayList<Session> sessionList = new ArrayList<Session>();
 	public static Clock systemClock = new Clock();
@@ -14,12 +14,15 @@ public class Simulation {
 	public static int backEndRequestsNumber = 0;
 	public static int completedSessions = 0;
 	public static int currentSession;
+	public static double sessionResidenceTime = 0;
 	// bound
-	// public static int systemBound=250;
-	// public static int newSessionDropped=0;
-	// public static int runninSessionDropped=0;
-	// bound
-	public static Statistics statistics = new Statistics(0.0, 0.0, 0.0);
+//	public static int systemBound = 250;
+//	public static int newSessionDropped = 0;
+//	public static int runningSessionDropped = 0;
+	// bound fine
+	public static Statistics frontEnd = new Statistics(0.0, 0.0, 0.0);
+	public static Statistics backEnd = new Statistics(0.0, 0.0, 0.0);
+	public static Statistics infiniteServer = new Statistics(0.0, 0.0, 0.0);
 
 	public static void main(String[] args) {
 
@@ -37,18 +40,30 @@ public class Simulation {
 			} else {
 				systemClock.setNext(nextArrivalTime);
 			}
-			System.out.println("Clock corrente =" + systemClock.getNext());
+			// System.out.println("Clock corrente =" + systemClock.getNext());
 			// ----------------------------------------------------------
-			statistics
-					.setFrontEnd(statistics.getFrontEnd()
-							+ ((systemClock.getNext() - systemClock
-									.getCurrent()) * frontEndRequestsNumber));
-			statistics
-					.setBackEnd(statistics.getBackEnd()
-							+ ((systemClock.getNext() - systemClock
-									.getCurrent()) * backEndRequestsNumber));
-			statistics
-					.setThinkTime(statistics.getThinkTime()
+			if (frontEndRequestsNumber > 0) {
+				frontEnd.setAveragedPopulation(frontEnd.getAveragedPopulation()
+						+ ((systemClock.getNext() - systemClock.getCurrent()) * frontEndRequestsNumber));
+				frontEnd.setAveragePopulationInQueue(frontEnd
+						.getAveragePopulationInQueue()
+						+ ((systemClock.getNext() - systemClock.getCurrent()) * (frontEndRequestsNumber - 1)));
+
+				frontEnd.setUtilization(frontEnd.getUtilization()
+						+ ((systemClock.getNext() - systemClock.getCurrent())));
+
+			}
+			if (backEndRequestsNumber > 0) {
+				backEnd.setAveragedPopulation(backEnd.getAveragedPopulation()
+						+ ((systemClock.getNext() - systemClock.getCurrent()) * backEndRequestsNumber));
+				backEnd.setAveragePopulationInQueue(backEnd
+						.getAveragePopulationInQueue()
+						+ ((systemClock.getNext() - systemClock.getCurrent()) * (backEndRequestsNumber - 1)));
+				backEnd.setUtilization(backEnd.getUtilization()
+						+ ((systemClock.getNext() - systemClock.getCurrent())));
+			}
+			infiniteServer
+					.setUtilization(infiniteServer.getUtilization()
 							+ ((systemClock.getNext() - systemClock
 									.getCurrent()) * (arrivedSessions
 									- completedSessions
@@ -59,32 +74,35 @@ public class Simulation {
 
 			if (systemClock.getCurrent() == nextArrivalTime) {
 				// bound
-				// if(frontEndRequestsNumber+backEndRequestsNumber<systemBound)
-				// {
-				arrivedSessions++;
-				frontEndRequestsNumber++;
-				Session newSession = new Session();
-				newSession.setArrivalTime(systemClock.getCurrent());
-				newSession.setRequestNumber(GetNewRequestsNumber());
-				newSession
-						.setFrontEndCompletionTime(GetMaxFrontEndCompletionTime()
-								+ GetFrontEndService());
+//				if (frontEndRequestsNumber + backEndRequestsNumber < systemBound) {
+					// bound fine
+					arrivedSessions++;
+					frontEndRequestsNumber++;
+					Session newSession = new Session();
+					newSession.setArrivalTime(systemClock.getCurrent());
+					newSession.setRequestNumber(GetNewRequestsNumber());
+					newSession
+							.setFrontEndCompletionTime(GetMaxFrontEndCompletionTime()
+									+ GetFrontEndService());
 
-				sessionList.add(newSession);
+					sessionList.add(newSession);
 
-				if (systemClock.getCurrent() < stop) {
+					if (systemClock.getCurrent() < stop) {
 
-					nextArrivalTime = GetArrival();
-				} else {
-					nextArrivalTime = Double.MAX_VALUE;
-					// con un tempo di 50 il tempo supera il valore massimo del
-					// double?
+						nextArrivalTime = GetArrival();
+					} else {
+						nextArrivalTime = Double.MAX_VALUE;
 
-				}
-				// bound
-				// }
-				// else
-				// newSessionDropped++;
+					}
+					// bound
+//				} else {
+//					newSessionDropped++;
+//					if (systemClock.getCurrent() < stop) {
+//
+//						nextArrivalTime = GetArrival();
+//					}
+//				}
+				// bound fine
 
 			} else if (sessionList.get(currentSession) != null
 					&& systemClock.getCurrent() == sessionList.get(
@@ -105,8 +123,15 @@ public class Simulation {
 
 				backEndRequestsNumber--;
 				if (sessionList.get(currentSession).getRequestNumber() == 0) {
-					sessionList.remove(currentSession);
 					completedSessions++;
+					// job average statistics: WELLFORD
+					sessionResidenceTime = sessionResidenceTime
+							+ ((systemClock.getCurrent()
+									- sessionList.get(currentSession)
+											.getArrivalTime() - sessionResidenceTime) / completedSessions);
+					// job average statistics: WELLFORD
+					sessionList.remove(currentSession);
+
 				} else {
 					sessionList.get(currentSession).setBackEndCompletionTime(
 							Double.MAX_VALUE);
@@ -118,53 +143,82 @@ public class Simulation {
 			} else if (sessionList.get(currentSession) != null
 					&& systemClock.getCurrent() == sessionList.get(
 							currentSession).getThinkTimeCompletionTime()) {
-				//bound
-				// if(frontEndRequestsNumber+backEndRequestsNumber<systemBound)
-				// {
-				sessionList.get(currentSession).setThinkTimeCompletionTime(
-						Double.MAX_VALUE);
-				sessionList.get(currentSession).setFrontEndCompletionTime(
-						GetMaxFrontEndCompletionTime() + GetFrontEndService());
-				frontEndRequestsNumber++;
-				//bound
-				// }
-				// else
-				// runninSessionDropped++;
+				// bound
+//				if (frontEndRequestsNumber + backEndRequestsNumber < systemBound) {
+//					// bound fine
+					sessionList.get(currentSession).setThinkTimeCompletionTime(
+							Double.MAX_VALUE);
+					sessionList.get(currentSession).setFrontEndCompletionTime(
+							GetMaxFrontEndCompletionTime()
+									+ GetFrontEndService());
+					frontEndRequestsNumber++;
+					// bound
+//				} else {
+//					runningSessionDropped++;
+//					sessionList.remove(currentSession);
+//				}
+				// bound fine
 
 			}
 
-			System.out
-					.println("-------------------------------------------------------------------------");
-			System.out.println("sessioni nel sistema =" + sessionList.size());
-			System.out.println("Numero di sessioni arrivate nel sistema ="
-					+ arrivedSessions);
-			System.out.println("Numero di sessioni partite dal sistema ="
-					+ completedSessions);
-			System.out.println("Numero di sessioni nel front end ="
-					+ frontEndRequestsNumber);
-			System.out.println("Numero di sessioni nel back end ="
-					+ backEndRequestsNumber);
-			System.out.println("Numero di sessioni in think time ="
-					+ (arrivedSessions - completedSessions
-							- frontEndRequestsNumber - backEndRequestsNumber));
-			System.out.println("Prossimo istante di completamento ="
-					+ nextCompletionTime);
-			System.out.println("Prossimo istante di arrivo =" + arrival);
+//			 System.out
+//			 .println("-------------------------------------------------------------------------");
+//			 System.out.println("sessioni nel sistema =" +
+//			 sessionList.size());
+//			 System.out.println("Numero di sessioni arrivate nel sistema ="
+//			 + arrivedSessions);
+//			 System.out.println("Numero di sessioni partite dal sistema ="
+//			 + completedSessions);
+//			 System.out.println("Numero di sessioni nel front end ="
+//			 + frontEndRequestsNumber);
+//			 System.out.println("Numero di sessioni nel back end ="
+//			 + backEndRequestsNumber);
+//			 System.out.println("Numero di sessioni in think time ="
+//			 + (arrivedSessions - completedSessions
+//			 - frontEndRequestsNumber - backEndRequestsNumber));
+//			 System.out.println("Prossimo istante di completamento ="
+//			 + nextCompletionTime);
+//			 System.out
+//			 .println("Prossimo istante di arrivo =" + nextArrivalTime);
 		}
-		statistics.setThroughput(completedSessions / systemClock.getCurrent());
+		frontEnd.setAveragePopulationInQueue(frontEnd
+				.getAveragePopulationInQueue() / systemClock.getCurrent());
+		frontEnd.setUtilization(frontEnd.getUtilization()
+				/ systemClock.getCurrent());
+		frontEnd.setAveragedPopulation(frontEnd.getAveragedPopulation()
+				/ systemClock.getCurrent());
+		backEnd.setAveragePopulationInQueue(backEnd
+				.getAveragePopulationInQueue() / systemClock.getCurrent());
+		backEnd.setUtilization(backEnd.getUtilization()
+				/ systemClock.getCurrent());
+		backEnd.setAveragedPopulation(backEnd.getAveragedPopulation()
+				/ systemClock.getCurrent());
+		infiniteServer.setUtilization(infiniteServer.getUtilization()/systemClock.getCurrent());
 		System.out
 				.println("<<<<<<<<<<<<<<Statistiche time averaged<<<<<<<<<<<<<<<<<<<<<<<<<<");
-
-		System.out.println("Numero medio di sessioni nel front end ="
-				+ (statistics.getFrontEnd() / systemClock.getCurrent()));
-		System.out.println("Numero medio di sessioni nel back end ="
-				+ (statistics.getBackEnd() / systemClock.getCurrent()));
-		System.out.println("Numero medio di sessioni nel think time ="
-				+ (statistics.getThinkTime() / systemClock.getCurrent()));
-		System.out.println("Troughput di sistema ="
-				+ statistics.getThroughput());
-
+		System.out.println("Numero medio di sessioni in coda nel front end = "
+				+ (frontEnd.getAveragePopulationInQueue()));
+		System.out.println("Utilizzazione media nel front end = "
+				+ (frontEnd.getUtilization()));
+		System.out.println("Numero medio di sessioni nel front end = "
+				+ (frontEnd.getAveragedPopulation()));
+		System.out.println("Numero medio di sessioni in coda nel back end = "
+				+ (backEnd.getAveragePopulationInQueue()));
+		System.out.println("Utilizzazione media nel back end = "
+				+ (backEnd.getUtilization()));
+		System.out.println("Numero medio di sessioni nel back end = "
+				+ (backEnd.getAveragedPopulation()));
+		System.out.println("Numero medio di sessioni nel sistema = "
+				+ (backEnd.getAveragedPopulation()+frontEnd.getAveragedPopulation()+infiniteServer.getUtilization()));
+		
+		System.out
+				.println("Tempo di residenza medio nel sistema per sessione = "
+						+ sessionResidenceTime);
 		System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+		// bound
+//		System.out.println("Sessioni nuove rifiutate " + newSessionDropped);
+//		System.out.println("Sessioni stoppate " + runningSessionDropped);
+		// bound fine
 	}
 
 	public static double GetNextCompletionTime() {
@@ -233,6 +287,7 @@ public class Simulation {
 	public static double GetArrival() {
 		generator.selectStream(0);
 		arrival += Exponential(0.028571429);
+		//arrival += Exponential(0.00117); per testare in regime stazionario
 
 		return arrival;
 	}
