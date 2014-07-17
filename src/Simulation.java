@@ -14,6 +14,11 @@ public class Simulation {
 	public static int backEndRequestsNumber = 0;
 	public static int completedSessions = 0;
 	public static int currentSession;
+	// bound
+	// public static int systemBound=250;
+	// public static int newSessionDropped=0;
+	// public static int runninSessionDropped=0;
+	// bound
 	public static Statistics statistics = new Statistics(0.0, 0.0, 0.0);
 
 	public static void main(String[] args) {
@@ -34,18 +39,28 @@ public class Simulation {
 			}
 			System.out.println("Clock corrente =" + systemClock.getNext());
 			// ----------------------------------------------------------
-			statistics.setFrontEnd(statistics.getFrontEnd()
-					+ ((systemClock.getNext() - systemClock.getCurrent()) * frontEndRequestsNumber));
-			statistics.setBackEnd(statistics.getBackEnd()
-					+ ((systemClock.getNext() - systemClock.getCurrent()) * backEndRequestsNumber));
-			statistics.setThinkTime(statistics.getThinkTime()
-					+ ((systemClock.getNext() - systemClock.getCurrent()) * (arrivedSessions
-							- completedSessions - frontEndRequestsNumber - backEndRequestsNumber)));
+			statistics
+					.setFrontEnd(statistics.getFrontEnd()
+							+ ((systemClock.getNext() - systemClock
+									.getCurrent()) * frontEndRequestsNumber));
+			statistics
+					.setBackEnd(statistics.getBackEnd()
+							+ ((systemClock.getNext() - systemClock
+									.getCurrent()) * backEndRequestsNumber));
+			statistics
+					.setThinkTime(statistics.getThinkTime()
+							+ ((systemClock.getNext() - systemClock
+									.getCurrent()) * (arrivedSessions
+									- completedSessions
+									- frontEndRequestsNumber - backEndRequestsNumber)));
 			// ----------------------------------------------------------
-			
+
 			systemClock.setCurrent(systemClock.getNext());
 
 			if (systemClock.getCurrent() == nextArrivalTime) {
+				// bound
+				// if(frontEndRequestsNumber+backEndRequestsNumber<systemBound)
+				// {
 				arrivedSessions++;
 				frontEndRequestsNumber++;
 				Session newSession = new Session();
@@ -66,6 +81,10 @@ public class Simulation {
 					// double?
 
 				}
+				// bound
+				// }
+				// else
+				// newSessionDropped++;
 
 			} else if (sessionList.get(currentSession) != null
 					&& systemClock.getCurrent() == sessionList.get(
@@ -99,11 +118,18 @@ public class Simulation {
 			} else if (sessionList.get(currentSession) != null
 					&& systemClock.getCurrent() == sessionList.get(
 							currentSession).getThinkTimeCompletionTime()) {
+				//bound
+				// if(frontEndRequestsNumber+backEndRequestsNumber<systemBound)
+				// {
 				sessionList.get(currentSession).setThinkTimeCompletionTime(
 						Double.MAX_VALUE);
 				sessionList.get(currentSession).setFrontEndCompletionTime(
 						GetMaxFrontEndCompletionTime() + GetFrontEndService());
 				frontEndRequestsNumber++;
+				//bound
+				// }
+				// else
+				// runninSessionDropped++;
 
 			}
 
@@ -125,17 +151,20 @@ public class Simulation {
 					+ nextCompletionTime);
 			System.out.println("Prossimo istante di arrivo =" + arrival);
 		}
-	statistics.setThroughput(completedSessions/systemClock.getCurrent());
+		statistics.setThroughput(completedSessions / systemClock.getCurrent());
 		System.out
-		.println("<<<<<<<<<<<<<<Statistiche time averaged<<<<<<<<<<<<<<<<<<<<<<<<<<");
+				.println("<<<<<<<<<<<<<<Statistiche time averaged<<<<<<<<<<<<<<<<<<<<<<<<<<");
 
-		System.out.println("Numero medio di sessioni nel front end =" + (statistics.getFrontEnd()/systemClock.getCurrent()));
-		System.out.println("Numero medio di sessioni nel back end =" + (statistics.getBackEnd()/systemClock.getCurrent()));
-		System.out.println("Numero medio di sessioni nel think time =" + (statistics.getThinkTime()/systemClock.getCurrent()));
-		System.out.println("Troughput di sistema =" + statistics.getThroughput());
-		
-		System.out
-		.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+		System.out.println("Numero medio di sessioni nel front end ="
+				+ (statistics.getFrontEnd() / systemClock.getCurrent()));
+		System.out.println("Numero medio di sessioni nel back end ="
+				+ (statistics.getBackEnd() / systemClock.getCurrent()));
+		System.out.println("Numero medio di sessioni nel think time ="
+				+ (statistics.getThinkTime() / systemClock.getCurrent()));
+		System.out.println("Troughput di sistema ="
+				+ statistics.getThroughput());
+
+		System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
 	}
 
 	public static double GetNextCompletionTime() {
