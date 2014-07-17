@@ -1,13 +1,10 @@
-import java.io.ObjectInputStream.GetField;
 import java.util.ArrayList;
-
-import javax.annotation.Generated;
 
 public class Simulation {
 
 	public static Rngs generator = new Rngs();
 	public static double start = 0;
-	public static double stop = 1;
+	public static double stop = 50;
 	public static double arrival = 0;
 	public static ArrayList<Session> sessionList = new ArrayList<Session>();
 	public static Clock systemClock = new Clock();
@@ -17,12 +14,11 @@ public class Simulation {
 	public static int backEndRequestsNumber = 0;
 	public static int completedSessions = 0;
 	public static int currentSession;
+	public static Statistics statistics = new Statistics(0.0, 0.0, 0.0);
 
 	public static void main(String[] args) {
 
 		generator.plantSeeds(-1);
-		// aggiornare stop prendendo valore dall'argomento
-
 		double nextCompletionTime = Double.MAX_VALUE;
 		double nextArrivalTime = Double.MAX_VALUE;
 		GetArrival();
@@ -37,11 +33,21 @@ public class Simulation {
 				systemClock.setNext(nextArrivalTime);
 			}
 			System.out.println("Clock corrente =" + systemClock.getNext());
-			// aggiorno statistiche
-
+			// ----------------------------------------------------------
+			statistics.setFrontEnd(statistics.getFrontEnd()
+					+ ((systemClock.getNext() - systemClock.getCurrent()) * frontEndRequestsNumber));
+			statistics.setBackEnd(statistics.getBackEnd()
+					+ ((systemClock.getNext() - systemClock.getCurrent()) * backEndRequestsNumber));
+			statistics.setThinkTime(statistics.getThinkTime()
+					+ ((systemClock.getNext() - systemClock.getCurrent()) * (arrivedSessions
+							- completedSessions - frontEndRequestsNumber - backEndRequestsNumber)));
+			// ----------------------------------------------------------
+			
 			systemClock.setCurrent(systemClock.getNext());
 
 			if (systemClock.getCurrent() == nextArrivalTime) {
+				arrivedSessions++;
+				frontEndRequestsNumber++;
 				Session newSession = new Session();
 				newSession.setArrivalTime(systemClock.getCurrent());
 				newSession.setRequestNumber(GetNewRequestsNumber());
@@ -56,6 +62,8 @@ public class Simulation {
 					nextArrivalTime = GetArrival();
 				} else {
 					nextArrivalTime = Double.MAX_VALUE;
+					// con un tempo di 50 il tempo supera il valore massimo del
+					// double?
 
 				}
 
@@ -98,9 +106,11 @@ public class Simulation {
 				frontEndRequestsNumber++;
 
 			}
-			System.out.println("sessioni nel sistema =" + sessionList.size()
-					+ arrivedSessions);
-			System.out.println("Numero di sessioni presenti nel sistema ="
+
+			System.out
+					.println("-------------------------------------------------------------------------");
+			System.out.println("sessioni nel sistema =" + sessionList.size());
+			System.out.println("Numero di sessioni arrivate nel sistema ="
 					+ arrivedSessions);
 			System.out.println("Numero di sessioni partite dal sistema ="
 					+ completedSessions);
@@ -115,18 +125,18 @@ public class Simulation {
 					+ nextCompletionTime);
 			System.out.println("Prossimo istante di arrivo =" + arrival);
 		}
+	statistics.setThroughput(completedSessions/systemClock.getCurrent());
+		System.out
+		.println("<<<<<<<<<<<<<<Statistiche time averaged<<<<<<<<<<<<<<<<<<<<<<<<<<");
 
+		System.out.println("Numero medio di sessioni nel front end =" + (statistics.getFrontEnd()/systemClock.getCurrent()));
+		System.out.println("Numero medio di sessioni nel back end =" + (statistics.getBackEnd()/systemClock.getCurrent()));
+		System.out.println("Numero medio di sessioni nel think time =" + (statistics.getThinkTime()/systemClock.getCurrent()));
+		System.out.println("Troughput di sistema =" + statistics.getThroughput());
+		
+		System.out
+		.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
 	}
-
-	// private static void removeSession() {
-	// for (int i = 0; i < sessionList.size(); i++) {
-	// if (sessionList.get(i).isCompleted() == true) {
-	// sessionList.remove(i);
-	// return;
-	// }
-	// }
-	// return;
-	// }
 
 	public static double GetNextCompletionTime() {
 
