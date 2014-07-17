@@ -6,7 +6,7 @@ public class Session {
 	private double thinkTimeCompletionTime;
 	private double systemDepartureTime;
 	private int requestNumber;
-	private boolean completed;
+	//private boolean completed;
 
 	public Session() {
 
@@ -16,7 +16,7 @@ public class Session {
 		thinkTimeCompletionTime = Double.MAX_VALUE;
 		systemDepartureTime = Double.MAX_VALUE;
 		requestNumber = 0;
-		completed = false;
+		//completed = false;
 
 	}
 
@@ -68,13 +68,13 @@ public class Session {
 		this.requestNumber = requestNumber;
 	}
 
-	public boolean isCompleted() {
-		return completed;
-	}
-
-	public void setCompleted(boolean completed) {
-		this.completed = completed;
-	}
+//	public boolean isCompleted() {
+//		return completed;
+//	}
+//
+//	public void setCompleted(boolean completed) {
+//		this.completed = completed;
+//	}
 
 	public double minEventTime() {
 		double ret = 0;

@@ -16,7 +16,8 @@ public class Simulation {
 	public static int frontEndRequestsNumber = 0;
 	public static int backEndRequestsNumber = 0;
 	public static int completedSessions = 0;
-	public static Session currentSession;
+	public static int currentSession;
+
 	public static void main(String[] args) {
 
 		generator.plantSeeds(-1);
@@ -28,125 +29,126 @@ public class Simulation {
 		nextArrivalTime = arrival;
 
 		while ((systemClock.getCurrent() <= stop) || (sessionList.size() != 0)) {
-System.out.println("Numero di sessioni presenti nel sistema ="+arrivedSessions);
-System.out.println("Numero di sessioni partite dal sistema ="+completedSessions);
-System.out.println("Numero di sessioni nel front end ="+frontEndRequestsNumber);
-System.out.println("Numero di sessioni nel back end ="+backEndRequestsNumber);
-System.out.println("Numero di sessioni in think time ="+(arrivedSessions-completedSessions-frontEndRequestsNumber-backEndRequestsNumber));
-System.out.println("Prossimo istante di completamento ="+nextCompletionTime);
-System.out.println("Prossimo istante di arrivo ="+arrival);
-//if(currentSession!=null)
-//{
-//	System.out.println("Numero di sessioni nel front end ="+frontEndRequestsNumber);
-//}			
-nextCompletionTime = GetNextCompletionTime();
+
+			nextCompletionTime = GetNextCompletionTime();
 			if (nextCompletionTime <= nextArrivalTime) {
 				systemClock.setNext(nextCompletionTime);
 			} else {
 				systemClock.setNext(nextArrivalTime);
 			}
-			System.out.println("Clock corrente ="+systemClock.getNext());
+			System.out.println("Clock corrente =" + systemClock.getNext());
 			// aggiorno statistiche
 
 			systemClock.setCurrent(systemClock.getNext());
 
 			if (systemClock.getCurrent() == nextArrivalTime) {
-				System.out.println("STO PROCESSANDO UN ARRIVO");
-				arrivedSessions++;
-				frontEndRequestsNumber++;
-
 				Session newSession = new Session();
 				newSession.setArrivalTime(systemClock.getCurrent());
 				newSession.setRequestNumber(GetNewRequestsNumber());
-				System.out.println("Richieste assegnate alla sessione in corso "+newSession.getRequestNumber());
 				newSession
 						.setFrontEndCompletionTime(GetMaxFrontEndCompletionTime()
 								+ GetFrontEndService());
-				
 
 				sessionList.add(newSession);
 
 				if (systemClock.getCurrent() < stop) {
-					
+
 					nextArrivalTime = GetArrival();
 				} else {
 					nextArrivalTime = Double.MAX_VALUE;
-					break;
+
 				}
 
-			} else if (currentSession!=null && systemClock.getCurrent() == currentSession
-					.getFrontEndCompletionTime()) {
-				System.out.println("STO PROCESSANDO UN COMPLETAMENTO NEL FRONT END");
-				currentSession.setFrontEndCompletionTime(Double.MAX_VALUE);
-				currentSession
-						.setBackEndCompletionTime(GetMaxBACKEndCompletionTime()
-								+ GetBackEndService());
+			} else if (sessionList.get(currentSession) != null
+					&& systemClock.getCurrent() == sessionList.get(
+							currentSession).getFrontEndCompletionTime()) {
+				sessionList.get(currentSession).setFrontEndCompletionTime(
+						Double.MAX_VALUE);
+				sessionList.get(currentSession).setBackEndCompletionTime(
+						GetMaxBACKEndCompletionTime() + GetBackEndService());
 				frontEndRequestsNumber--;
 				backEndRequestsNumber++;
 
 				// nextCompletionTime=Double.MAX_VALUE;
-			} else if (currentSession!=null && systemClock.getCurrent() == currentSession
-					.getBackEndCompletionTime()) {
-				System.out.println("STO PROCESSANDO UN COMPLETAMENTO NEL BACK END");
-
-				currentSession.setRequestNumber(currentSession
-						.getRequestNumber() - 1);
+			} else if (sessionList.get(currentSession) != null
+					&& systemClock.getCurrent() == sessionList.get(
+							currentSession).getBackEndCompletionTime()) {
+				sessionList.get(currentSession).setRequestNumber(
+						sessionList.get(currentSession).getRequestNumber() - 1);
 
 				backEndRequestsNumber--;
-
-				if (currentSession.getRequestNumber() == 0) {
-					currentSession.setCompleted(true);
-					removeSession();
+				if (sessionList.get(currentSession).getRequestNumber() == 0) {
+					sessionList.remove(currentSession);
 					completedSessions++;
 				} else {
-					currentSession.setThinkTimeCompletionTime(currentSession
-							.getBackEndCompletionTime() + GetThinkTime());
-					currentSession.setBackEndCompletionTime(Double.MAX_VALUE);
+					sessionList.get(currentSession).setBackEndCompletionTime(
+							Double.MAX_VALUE);
+					sessionList.get(currentSession).setThinkTimeCompletionTime(
+							systemClock.getCurrent() + GetThinkTime());
+
 				}
 
-			} else if (currentSession!=null && systemClock.getCurrent() == currentSession
-					.getThinkTimeCompletionTime()) {
-				System.out.println("STO PROCESSANDO UN COMPLETAMENTO NEL THINK END");
-				currentSession.setThinkTimeCompletionTime(Double.MAX_VALUE);
-				currentSession
-						.setFrontEndCompletionTime(GetMaxFrontEndCompletionTime()
-								+ GetFrontEndService());
+			} else if (sessionList.get(currentSession) != null
+					&& systemClock.getCurrent() == sessionList.get(
+							currentSession).getThinkTimeCompletionTime()) {
+				sessionList.get(currentSession).setThinkTimeCompletionTime(
+						Double.MAX_VALUE);
+				sessionList.get(currentSession).setFrontEndCompletionTime(
+						GetMaxFrontEndCompletionTime() + GetFrontEndService());
 				frontEndRequestsNumber++;
 
 			}
-
+			System.out.println("sessioni nel sistema =" + sessionList.size()
+					+ arrivedSessions);
+			System.out.println("Numero di sessioni presenti nel sistema ="
+					+ arrivedSessions);
+			System.out.println("Numero di sessioni partite dal sistema ="
+					+ completedSessions);
+			System.out.println("Numero di sessioni nel front end ="
+					+ frontEndRequestsNumber);
+			System.out.println("Numero di sessioni nel back end ="
+					+ backEndRequestsNumber);
+			System.out.println("Numero di sessioni in think time ="
+					+ (arrivedSessions - completedSessions
+							- frontEndRequestsNumber - backEndRequestsNumber));
+			System.out.println("Prossimo istante di completamento ="
+					+ nextCompletionTime);
+			System.out.println("Prossimo istante di arrivo =" + arrival);
 		}
 
 	}
 
-	private static void removeSession() {
-		// TODO Auto-generated method stub
-
-	}
+	// private static void removeSession() {
+	// for (int i = 0; i < sessionList.size(); i++) {
+	// if (sessionList.get(i).isCompleted() == true) {
+	// sessionList.remove(i);
+	// return;
+	// }
+	// }
+	// return;
+	// }
 
 	public static double GetNextCompletionTime() {
-		
 
 		if (sessionList.size() > 0) {
 
 			double ret = Double.MAX_VALUE;
-			currentSession = null;
+			currentSession = 0;
 
 			for (int i = 0; i < sessionList.size(); i++) {
 				if (sessionList.get(i).minEventTime() <= ret) {
 					ret = sessionList.get(i).minEventTime();
-					currentSession = sessionList.get(i);
+					currentSession = i;
 				}
 			}
-			
+
 			return ret;
 
 		} else {
-			currentSession = null;
+			currentSession = -1;
 			return Double.MAX_VALUE;
-			
+
 		}
-		
 
 	}
 
@@ -192,7 +194,7 @@ nextCompletionTime = GetNextCompletionTime();
 	public static double GetArrival() {
 		generator.selectStream(0);
 		arrival += Exponential(0.028571429);
-		
+
 		return arrival;
 	}
 
@@ -209,6 +211,8 @@ nextCompletionTime = GetNextCompletionTime();
 	}
 
 	public static double GetThinkTime() {
+
+		// + arrivedSessions);
 		generator.selectStream(3);
 		return Exponential(7);
 
@@ -220,8 +224,8 @@ nextCompletionTime = GetNextCompletionTime();
 	}
 
 	public static double Exponential(double m) {
-		double temp=(-m * Math.log(1 - generator.random()));
-		return temp;//(-m * Math.log(1 - generator.random()));
+		double temp = (-m * Math.log(1 - generator.random()));
+		return temp;// (-m * Math.log(1 - generator.random()));
 	}
 
 	public static int Equilikely(int a, int b) {
