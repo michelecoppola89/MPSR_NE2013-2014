@@ -11,7 +11,7 @@ public class Simulation {
 
 	public static Rngs generator;
 	public static double start = 0;
-	public static double stop = 3000;
+	public static double stop = 30000;
 	public static double arrival;
 	public static ArrayList<Session> sessionList;
 	public static Clock systemClock;
@@ -20,25 +20,20 @@ public class Simulation {
 	public static int frontEndRequestsNumber;
 	public static int backEndRequestsNumber;
 	public static int completedSessions;
-	public static int completedRequests;
-	public static double lastArrivalRequestTime;
 	public static int currentSession;
 	public static double sessionResidenceTime;
-	public static double requestResidenceTime;
 	// bound
-	public static int systemBound = 250;
-	public static int droppedSessions;
-	public static int abortedSessions;
-	public static double dropRatio;
-	public static double abortedRatio;
+	// public static int systemBound = 250;
+	// public static int droppedSessions;
+	// public static int abortedSessions;
+	// public static double dropRatio;
+	// public static double abortedRatio;
 	// bound fine
 	public static Statistics frontEnd;
 	public static Statistics backEnd;
 	public static Statistics infiniteServer;
 	public static PrintWriter sessionAverageResidenceTimeWriter;
-	public static PrintWriter requestAverageResidenceTimeWriter;
 	public static PrintWriter sessionAverageInTheSystemWriter;
-	public static PrintWriter requestAverageInServersWriter;
 	public static PrintWriter throughputWriter;
 	public static PrintWriter feUtilizationWriter;
 	public static PrintWriter beUtilizationWriter;
@@ -55,17 +50,16 @@ public class Simulation {
 			frontEndRequestsNumber = 0;
 			backEndRequestsNumber = 0;
 			completedSessions = 0;
-			completedRequests = 0;
-			lastArrivalRequestTime = 0;
 			sessionResidenceTime = 0;
-			requestResidenceTime = 0;
 			generator = new Rngs();
 			throughput = 0.0;
 			arrival = 0;
-			abortedRatio=0;
-			abortedSessions=0;
-			droppedSessions=0;
-			dropRatio=0;
+			// bound
+			// abortedRatio=0;
+			// abortedSessions=0;
+			// droppedSessions=0;
+			// dropRatio=0;
+			// bound fine
 			frontEnd = new Statistics(0.0, 0.0, 0.0);
 			backEnd = new Statistics(0.0, 0.0, 0.0);
 			infiniteServer = new Statistics(0.0, 0.0, 0.0);
@@ -74,16 +68,9 @@ public class Simulation {
 					new BufferedWriter(new FileWriter(
 							"sessionAverageResidenceTime.txt", true)));
 
-			requestAverageResidenceTimeWriter = new PrintWriter(
-					new BufferedWriter(new FileWriter(
-							"requestAverageResidenceTime.txt", true)));
-
 			sessionAverageInTheSystemWriter = new PrintWriter(
 					new BufferedWriter(new FileWriter(
 							"sessionAverageInTheSystem.txt", true)));
-
-			requestAverageInServersWriter = new PrintWriter(new BufferedWriter(
-					new FileWriter("averageRequestInTheSystem.txt", true)));
 
 			throughputWriter = new PrintWriter(new BufferedWriter(
 					new FileWriter("throughput.txt", true)));
@@ -103,9 +90,7 @@ public class Simulation {
 			boundSimulation();
 			System.out.println("Round" + i + "completato");
 			sessionAverageResidenceTimeWriter.close();
-			requestAverageResidenceTimeWriter.close();
 			sessionAverageInTheSystemWriter.close();
-			requestAverageInServersWriter.close();
 			throughputWriter.close();
 			feUtilizationWriter.close();
 			beUtilizationWriter.close();
@@ -174,38 +159,38 @@ public class Simulation {
 			systemClock.setCurrent(systemClock.getNext());
 
 			if (systemClock.getCurrent() == nextArrivalTime) {
-				lastArrivalRequestTime = systemClock.getCurrent();
 				// bound
-				if ((frontEndRequestsNumber + backEndRequestsNumber) < systemBound) {
-					// bound fine
-					arrivedSessions++;
-					frontEndRequestsNumber++;
-					Session newSession = new Session();
-					newSession.setArrivalTime(systemClock.getCurrent());
-					newSession.setRequestNumber(GetNewRequestsNumber());
-					newSession
-							.setFrontEndCompletionTime(GetMaxFrontEndCompletionTime()
-									+ GetFrontEndService());
+				// if ((frontEndRequestsNumber + backEndRequestsNumber) <
+				// systemBound) {
+				// bound fine
+				arrivedSessions++;
+				frontEndRequestsNumber++;
+				Session newSession = new Session();
+				newSession.setArrivalTime(systemClock.getCurrent());
+				newSession.setRequestNumber(GetNewRequestsNumber());
+				newSession
+						.setFrontEndCompletionTime(GetMaxFrontEndCompletionTime()
+								+ GetFrontEndService());
 
-					sessionList.add(newSession);
+				sessionList.add(newSession);
 
-					if (systemClock.getCurrent() < stop) {
+				if (systemClock.getCurrent() < stop) {
 
-						nextArrivalTime = GetArrival();
-					} else {
-						nextArrivalTime = Double.MAX_VALUE;
-
-					}
-					// bound
+					nextArrivalTime = GetArrival();
 				} else {
-					droppedSessions++;
-					if (systemClock.getCurrent() < stop) {
+					nextArrivalTime = Double.MAX_VALUE;
 
-						nextArrivalTime = GetArrival();
-					} else {
-						nextArrivalTime = Double.MAX_VALUE;
-					}
 				}
+				// bound
+				// } else {
+				// droppedSessions++;
+				// if (systemClock.getCurrent() < stop) {
+				//
+				// nextArrivalTime = GetArrival();
+				// } else {
+				// nextArrivalTime = Double.MAX_VALUE;
+				// }
+				// }
 				// bound fine
 
 			} else if (sessionList.get(currentSession) != null
@@ -222,11 +207,6 @@ public class Simulation {
 			} else if (sessionList.get(currentSession) != null
 					&& systemClock.getCurrent() == sessionList.get(
 							currentSession).getBackEndCompletionTime()) {
-				completedRequests++;
-				// job average statistics: WELLFORD
-				requestResidenceTime = requestResidenceTime
-						+ ((systemClock.getCurrent() - lastArrivalRequestTime - requestResidenceTime) / completedRequests);
-				// job average statistics: WELLFORD
 				sessionList.get(currentSession).setRequestNumber(
 						sessionList.get(currentSession).getRequestNumber() - 1);
 
@@ -252,21 +232,20 @@ public class Simulation {
 			} else if (sessionList.get(currentSession) != null
 					&& systemClock.getCurrent() == sessionList.get(
 							currentSession).getThinkTimeCompletionTime()) {
-				lastArrivalRequestTime = systemClock.getCurrent();
 				// bound
-				if ((frontEndRequestsNumber + backEndRequestsNumber) < systemBound) {
-					// // bound fine
-					sessionList.get(currentSession).setThinkTimeCompletionTime(
-							Double.MAX_VALUE);
-					sessionList.get(currentSession).setFrontEndCompletionTime(
-							GetMaxFrontEndCompletionTime()
-									+ GetFrontEndService());
-					frontEndRequestsNumber++;
-					// bound
-				} else {
-					abortedSessions++;
-					sessionList.remove(currentSession);
-				}
+				// if ((frontEndRequestsNumber + backEndRequestsNumber) <
+				// systemBound) {
+				// // bound fine
+				sessionList.get(currentSession).setThinkTimeCompletionTime(
+						Double.MAX_VALUE);
+				sessionList.get(currentSession).setFrontEndCompletionTime(
+						GetMaxFrontEndCompletionTime() + GetFrontEndService());
+				frontEndRequestsNumber++;
+				// bound
+				// } else {
+				// abortedSessions++;
+				// sessionList.remove(currentSession);
+				// }
 				// bound fine
 
 			}
@@ -308,9 +287,12 @@ public class Simulation {
 		infiniteServer.setUtilization(infiniteServer.getUtilization()
 				/ systemClock.getCurrent());
 		throughput = completedSessions / systemClock.getCurrent();
-		abortedRatio=((double)abortedSessions/(double)arrivedSessions);
-		dropRatio= ((double)droppedSessions/(double)(arrivedSessions+droppedSessions));
-
+		// bound
+//		abortedRatio = ((double) abortedSessions / (double) arrivedSessions);
+//		dropRatio = ((double) droppedSessions / (double) (arrivedSessions + droppedSessions));
+		// bound fine
+		
+		
 		// System.out
 		// .println("<<<<<<<<<<<<<<Statistiche time averaged<<<<<<<<<<<<<<<<<<<<<<<<<<");
 		// System.out.println("Numero medio di sessioni in coda nel front end = "
@@ -339,7 +321,6 @@ public class Simulation {
 
 		// -----------------write on file
 		sessionAverageResidenceTimeWriter.println(sessionResidenceTime);
-		requestAverageResidenceTimeWriter.println(requestResidenceTime);
 
 		double temp = (backEnd.getAveragedPopulation()
 				+ frontEnd.getAveragedPopulation() + infiniteServer
@@ -348,12 +329,15 @@ public class Simulation {
 		throughputWriter.println(throughput);
 		feUtilizationWriter.println(frontEnd.getUtilization());
 		beUtilizationWriter.println(backEnd.getUtilization());
-		dropRatioWriter.println(dropRatio);
-		abortedRatioWriter.println(abortedRatio);
-		double temp2 = frontEnd.getAveragedPopulation()+backEnd.getAveragedPopulation();
-		requestAverageInServersWriter.println(temp2);
-		System.out.println("DROP="+droppedSessions+"/"+(arrivedSessions+droppedSessions));
-		System.out.println("uscite"+completedSessions);
+		//bound
+//		dropRatioWriter.println(dropRatio);
+//		abortedRatioWriter.println(abortedRatio);
+//		System.out.println("DROP=" + droppedSessions + "/"
+//				+ (arrivedSessions + droppedSessions));
+		//bound fine
+		double temp2 = frontEnd.getAveragedPopulation()
+				+ backEnd.getAveragedPopulation();
+		System.out.println("uscite" + completedSessions);
 	}
 
 	public static double GetNextCompletionTime() {
