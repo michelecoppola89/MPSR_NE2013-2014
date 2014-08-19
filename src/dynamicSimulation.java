@@ -54,8 +54,8 @@ public class dynamicSimulation {
 	
 	public static void main(String[] args) throws IOException {
 
-		for (int stop = 0; stop < stopMaxValue; stop+=50) {
-		for (int i = 1; i <= runNumber; i++) {
+		for (int stop = 0; stop < stopMaxValue; stop++) {
+		for (int i = 1; i < runNumber; i++) {
 			sessionList = new ArrayList<Session>();
 			systemClock = new Clock();
 			arrivedSessions = 0;
@@ -150,9 +150,9 @@ public class dynamicSimulation {
 		feUtilizationRes = feUtilizationRes / runNumber;
 		beUtilizationRes = beUtilizationRes / runNumber;
 		PrintWriter sessionThroughputWriter = new PrintWriter(new BufferedWriter(
-				new FileWriter("DYNAMIC_mean_session_hroughput.txt", true)));
+				new FileWriter("DYNAMIC_mean_session_throughput.txt", true)));
 		PrintWriter requestThroughputWriter = new PrintWriter(new BufferedWriter(
-				new FileWriter("DYNAMIC_mean_reuqest_Throughput.txt", true)));
+				new FileWriter("DYNAMIC_mean_reuqest_throughput.txt", true)));
 		PrintWriter feUtilizationWriter = new PrintWriter(
 				new BufferedWriter(new FileWriter("DYNAMIC_meanFeUtilization.txt",
 						true)));
@@ -160,14 +160,14 @@ public class dynamicSimulation {
 				new BufferedWriter(new FileWriter("DYNAMIC_meanBeUtilization.txt",
 						true)));
 		sessionThroughputWriter.println(sessionThroughputRes);
-		requestThroughputWriter.println(requestThroughputRes);
 		sessionThroughputWriter.close();
+		requestThroughputWriter.println(requestThroughputRes);
 		requestThroughputWriter.close();
 		feUtilizationWriter.println(feUtilizationRes);
 		feUtilizationWriter.close();
 		beUtilizationWriter.println(beUtilizationRes);
 		beUtilizationWriter.close();
-		System.out.println("Prova con stop impostato a =" + stop);
+		System.out.println("Prova con stop impostato a " + stop);
 		}
 
 	}
