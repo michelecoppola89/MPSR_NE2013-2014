@@ -19,7 +19,8 @@ public class dynamicSimulation {
 	public static double arrival;
 	public static ArrayList<Session> sessionList;
 	public static Clock systemClock;
-	public static double throughput;
+	public static double sessionThroughput;
+	public static double requestThroughput;
 	public static int arrivedSessions;
 	public static int frontEndRequestsNumber;
 	public static int backEndRequestsNumber;
@@ -38,14 +39,16 @@ public class dynamicSimulation {
 	public static Statistics infiniteServer;
 	public static PrintWriter sessionAverageResidenceTimeWriter;
 	public static PrintWriter sessionAverageInTheSystemWriter;
-	public static PrintWriter throughputWriter;
+	public static PrintWriter sessionThroughputWriter;
+	public static PrintWriter requestThroughputWriter;
 	public static PrintWriter feUtilizationWriter;
 	public static PrintWriter beUtilizationWriter;
 	public static PrintWriter dropRatioWriter;
 	public static PrintWriter abortedRatioWriter;
 	public static PrintWriter responseTimeWriter;
 
-	public static double[] meanThroughput = new double[runNumber];
+	public static double[] meanSessionThroughput = new double[runNumber];
+	public static double[] meanRequestThroughput = new double[runNumber];
 	public static double[] meanFeUtilization = new double[runNumber];
 	public static double[] meanBeUtilization = new double[runNumber];
 	
@@ -63,7 +66,8 @@ public class dynamicSimulation {
 			sessionResidenceTime = 0;
 			requestResponseTime = 0;
 			generator = new Rngs();
-			throughput = 0.0;
+			sessionThroughput = 0.0;
+			requestThroughput=0.0;
 			arrival = 0;
 			// bound
 			abortedRatio = 0;
@@ -83,8 +87,11 @@ public class dynamicSimulation {
 					new BufferedWriter(new FileWriter(
 							"sessionAverageInTheSystem.txt", true)));
 
-			throughputWriter = new PrintWriter(new BufferedWriter(
-					new FileWriter("throughput.txt", true)));
+			sessionThroughputWriter = new PrintWriter(new BufferedWriter(
+					new FileWriter("session_throughput.txt", true)));
+			
+			requestThroughputWriter = new PrintWriter(new BufferedWriter(
+					new FileWriter("request_throughput.txt", true)));
 
 			feUtilizationWriter = new PrintWriter(new BufferedWriter(
 					new FileWriter("feUtilization.txt", true)));
@@ -106,7 +113,8 @@ public class dynamicSimulation {
 			{
 			sessionAverageResidenceTimeWriter.println("------------");
 			sessionAverageInTheSystemWriter.println("------------");
-			throughputWriter.println("------------");
+			sessionThroughputWriter.println("------------");
+			requestThroughputWriter.println("------------");
 			feUtilizationWriter.println("------------");
 			beUtilizationWriter.println("------------");
 			dropRatioWriter.println("------------");
@@ -115,37 +123,46 @@ public class dynamicSimulation {
 			}
 			sessionAverageResidenceTimeWriter.close();
 			sessionAverageInTheSystemWriter.close();
-			throughputWriter.close();
+			sessionThroughputWriter.close();
+			requestThroughputWriter.close();
 			feUtilizationWriter.close();
 			beUtilizationWriter.close();
 			dropRatioWriter.close();
 			abortedRatioWriter.close();
 			responseTimeWriter.close();
-			meanThroughput[i] = throughput;
+			meanSessionThroughput[i] =sessionThroughput;
+			meanRequestThroughput[i] =requestThroughput;
 			meanFeUtilization[i] = frontEnd.getUtilization();
 			meanBeUtilization[i] = backEnd.getUtilization();
 		}
-		double throughputRes = 0;
+		double sessionThroughputRes = 0;
+		double requestThroughputRes = 0;
 		double feUtilizationRes = 0;
 		double beUtilizationRes = 0;
 		for (int i = 0; i < runNumber; i++) {
-			throughputRes += meanThroughput[i];
+			sessionThroughputRes += meanSessionThroughput[i];
+			requestThroughputRes += meanRequestThroughput[i];
 			feUtilizationRes += meanFeUtilization[i];
 			beUtilizationRes += meanBeUtilization[i];
 		}
-		throughputRes = throughputRes / runNumber;
+		sessionThroughputRes = sessionThroughputRes / runNumber;
+		requestThroughputRes = requestThroughputRes / runNumber;
 		feUtilizationRes = feUtilizationRes / runNumber;
 		beUtilizationRes = beUtilizationRes / runNumber;
-		PrintWriter throughputWriter = new PrintWriter(new BufferedWriter(
-				new FileWriter("DYNAMIC_meanThroughput.txt", true)));
+		PrintWriter sessionThroughputWriter = new PrintWriter(new BufferedWriter(
+				new FileWriter("DYNAMIC_mean_session_hroughput.txt", true)));
+		PrintWriter requestThroughputWriter = new PrintWriter(new BufferedWriter(
+				new FileWriter("DYNAMIC_mean_reuqest_Throughput.txt", true)));
 		PrintWriter feUtilizationWriter = new PrintWriter(
 				new BufferedWriter(new FileWriter("DYNAMIC_meanFeUtilization.txt",
 						true)));
 		PrintWriter beUtilizationWriter = new PrintWriter(
 				new BufferedWriter(new FileWriter("DYNAMIC_meanBeUtilization.txt",
 						true)));
-		throughputWriter.println(throughputRes);
-		throughputWriter.close();
+		sessionThroughputWriter.println(sessionThroughputRes);
+		requestThroughputWriter.println(requestThroughputRes);
+		sessionThroughputWriter.close();
+		requestThroughputWriter.close();
 		feUtilizationWriter.println(feUtilizationRes);
 		feUtilizationWriter.close();
 		beUtilizationWriter.println(beUtilizationRes);
@@ -323,7 +340,8 @@ public class dynamicSimulation {
 				/ systemClock.getCurrent());
 		infiniteServer.setUtilization(infiniteServer.getUtilization()
 				/ systemClock.getCurrent());
-		throughput = completedSessions / systemClock.getCurrent();
+		sessionThroughput = completedSessions / systemClock.getCurrent();
+		requestThroughput = completedRequests / systemClock.getCurrent();
 		abortedRatio = ((double) abortedSessions / (double) arrivedSessions);
 		dropRatio = ((double) droppedSessions / (double) (arrivedSessions + droppedSessions));
 
@@ -334,7 +352,8 @@ public class dynamicSimulation {
 				+ frontEnd.getAveragedPopulation() + infiniteServer
 				.getUtilization());
 		sessionAverageInTheSystemWriter.println(temp);
-		throughputWriter.println(throughput);
+		sessionThroughputWriter.println(sessionThroughput);
+		requestThroughputWriter.println(requestThroughput);
 		feUtilizationWriter.println(frontEnd.getUtilization());
 		beUtilizationWriter.println(backEnd.getUtilization());
 		responseTimeWriter.println(requestResponseTime);

@@ -18,7 +18,8 @@ public class Simulation {
 	public static double arrival;
 	public static ArrayList<Session> sessionList;
 	public static Clock systemClock;
-	public static double throughput;
+	public static double sessionThroughput;
+	public static double requestThroughput;
 	public static int arrivedSessions;
 	public static int frontEndRequestsNumber;
 	public static int backEndRequestsNumber;
@@ -37,7 +38,8 @@ public class Simulation {
 	public static Statistics infiniteServer;
 	public static PrintWriter sessionAverageResidenceTimeWriter;
 	public static PrintWriter sessionAverageInTheSystemWriter;
-	public static PrintWriter throughputWriter;
+	public static PrintWriter sessionThroughputWriter;
+	public static PrintWriter requestThroughputWriter;
 	public static PrintWriter feUtilizationWriter;
 	public static PrintWriter beUtilizationWriter;
 	public static PrintWriter dropRatioWriter;
@@ -57,7 +59,8 @@ public class Simulation {
 			sessionResidenceTime = 0;
 			requestResponseTime = 0;
 			generator = new Rngs();
-			throughput = 0.0;
+			sessionThroughput = 0.0;
+			requestThroughput = 0.0;
 			arrival = 0;
 			abortedRatio = 0;
 			abortedSessions = 0;
@@ -75,8 +78,11 @@ public class Simulation {
 					new BufferedWriter(new FileWriter(
 							"sessionAverageInTheSystem.txt", true)));
 
-			throughputWriter = new PrintWriter(new BufferedWriter(
-					new FileWriter("throughput.txt", true)));
+			sessionThroughputWriter = new PrintWriter(new BufferedWriter(
+					new FileWriter("session_throughput.txt", true)));
+
+			requestThroughputWriter = new PrintWriter(new BufferedWriter(
+					new FileWriter("request_throughput.txt", true)));
 
 			feUtilizationWriter = new PrintWriter(new BufferedWriter(
 					new FileWriter("feUtilization.txt", true)));
@@ -97,7 +103,8 @@ public class Simulation {
 			if (i == runNumber) {
 				sessionAverageResidenceTimeWriter.println("------------");
 				sessionAverageInTheSystemWriter.println("------------");
-				throughputWriter.println("------------");
+				sessionThroughputWriter.println("------------");
+				requestThroughputWriter.println("------------");
 				feUtilizationWriter.println("------------");
 				beUtilizationWriter.println("------------");
 				dropRatioWriter.println("------------");
@@ -106,7 +113,8 @@ public class Simulation {
 			}
 			sessionAverageResidenceTimeWriter.close();
 			sessionAverageInTheSystemWriter.close();
-			throughputWriter.close();
+			sessionThroughputWriter.close();
+			requestThroughputWriter.close();
 			feUtilizationWriter.close();
 			beUtilizationWriter.close();
 			dropRatioWriter.close();
@@ -285,7 +293,8 @@ public class Simulation {
 				/ systemClock.getCurrent());
 		infiniteServer.setUtilization(infiniteServer.getUtilization()
 				/ systemClock.getCurrent());
-		throughput = completedSessions / systemClock.getCurrent();
+		sessionThroughput = completedSessions / systemClock.getCurrent();
+		requestThroughput = completedRequests / systemClock.getCurrent();
 		abortedRatio = ((double) abortedSessions / (double) arrivedSessions);
 		dropRatio = ((double) droppedSessions / (double) (arrivedSessions + droppedSessions));
 
@@ -296,7 +305,8 @@ public class Simulation {
 				+ frontEnd.getAveragedPopulation() + infiniteServer
 				.getUtilization());
 		sessionAverageInTheSystemWriter.println(temp);
-		throughputWriter.println(throughput);
+		sessionThroughputWriter.println(sessionThroughput);
+		requestThroughputWriter.println(requestThroughput);
 		feUtilizationWriter.println(frontEnd.getUtilization());
 		beUtilizationWriter.println(backEnd.getUtilization());
 		responseTimeWriter.println(requestResponseTime);
@@ -457,7 +467,8 @@ public class Simulation {
 				/ systemClock.getCurrent());
 		infiniteServer.setUtilization(infiniteServer.getUtilization()
 				/ systemClock.getCurrent());
-		throughput = completedSessions / systemClock.getCurrent();
+		sessionThroughput = completedSessions / systemClock.getCurrent();
+		requestThroughput = completedRequests / systemClock.getCurrent();
 
 		// -----------------write on file
 		sessionAverageResidenceTimeWriter.println(sessionResidenceTime);
@@ -466,7 +477,8 @@ public class Simulation {
 				+ frontEnd.getAveragedPopulation() + infiniteServer
 				.getUtilization());
 		sessionAverageInTheSystemWriter.println(temp);
-		throughputWriter.println(throughput);
+		sessionThroughputWriter.println(sessionThroughput);
+		requestThroughputWriter.println(requestThroughput);
 		feUtilizationWriter.println(frontEnd.getUtilization());
 		beUtilizationWriter.println(backEnd.getUtilization());
 		responseTimeWriter.println(requestResponseTime);
