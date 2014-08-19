@@ -13,7 +13,7 @@ public class dynamicSimulation {
 	public static double start = 0;
 	public static int startRunNumber=0;
 	public static int stopMaxValue=30000;
-	public static int runNumber = 250;
+	public static int runNumber = 385;
 	
 	public static Rngs generator;
 	public static double arrival;
@@ -24,6 +24,7 @@ public class dynamicSimulation {
 	public static int frontEndRequestsNumber;
 	public static int backEndRequestsNumber;
 	public static int completedSessions;
+	public static int completedRequests;
 	public static int currentSession;
 	public static double sessionResidenceTime;
 	public static double requestResponseTime;
@@ -59,6 +60,7 @@ public class dynamicSimulation {
 			frontEndRequestsNumber = 0;
 			backEndRequestsNumber = 0;
 			completedSessions = 0;
+			completedRequests=0;
 			sessionResidenceTime = 0;
 			requestResponseTime = 0;
 			generator = new Rngs();
@@ -259,12 +261,13 @@ public class dynamicSimulation {
 						sessionList.get(currentSession).getRequestNumber() - 1);
 
 				backEndRequestsNumber--;
+				completedRequests++;
 
 				// job average statistics: WELLFORD
 				requestResponseTime = requestResponseTime
 						+ ((systemClock.getCurrent()
 								- sessionList.get(currentSession)
-										.getLastArrivalTime() - requestResponseTime) / completedSessions);
+										.getLastArrivalTime() - requestResponseTime) / completedRequests);
 				// ---------------------------------------------------------------
 
 				if (sessionList.get(currentSession).getRequestNumber() == 0) {
