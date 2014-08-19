@@ -39,6 +39,7 @@ public class burstySimulation {
 	public static Statistics infiniteServer;
 	public static PrintWriter sessionAverageResidenceTimeWriter;
 	public static PrintWriter sessionAverageInTheSystemWriter;
+	public static PrintWriter requestAverageInTheSystemWriter;
 	public static PrintWriter sessionThroughputWriter;
 	public static PrintWriter requestThroughputWriter;
 	public static PrintWriter feUtilizationWriter;
@@ -78,6 +79,10 @@ public class burstySimulation {
 			sessionAverageInTheSystemWriter = new PrintWriter(
 					new BufferedWriter(new FileWriter(
 							"sessionAverageInTheSystem.txt", true)));
+			
+			requestAverageInTheSystemWriter = new PrintWriter(
+					new BufferedWriter(new FileWriter(
+							"requestAverageInTheSystem.txt", true)));
 
 			sessionThroughputWriter = new PrintWriter(new BufferedWriter(
 					new FileWriter("session_throughput.txt", true)));
@@ -104,6 +109,7 @@ public class burstySimulation {
 			if (i == runNumber) {
 				sessionAverageResidenceTimeWriter.println("------------");
 				sessionAverageInTheSystemWriter.println("------------");
+				requestAverageInTheSystemWriter.println("------------");
 				sessionThroughputWriter.println("------------");
 				requestThroughputWriter.println("------------");
 				feUtilizationWriter.println("------------");
@@ -114,6 +120,7 @@ public class burstySimulation {
 			}
 			sessionAverageResidenceTimeWriter.close();
 			sessionAverageInTheSystemWriter.close();
+			requestAverageInTheSystemWriter.close();
 			sessionThroughputWriter.close();
 			requestThroughputWriter.close();
 			feUtilizationWriter.close();
@@ -306,6 +313,8 @@ public class burstySimulation {
 				+ frontEnd.getAveragedPopulation() + infiniteServer
 				.getUtilization());
 		sessionAverageInTheSystemWriter.println(temp);
+		requestAverageInTheSystemWriter.println(backEnd.getAveragedPopulation()
+				+ frontEnd.getAveragedPopulation() );
 		sessionThroughputWriter.println(sessionThroughput);
 		requestThroughputWriter.println(requestThroughput);
 		feUtilizationWriter.println(frontEnd.getUtilization());
