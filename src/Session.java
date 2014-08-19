@@ -1,6 +1,7 @@
 public class Session {
 
 	private double arrivalTime;
+	private double lastArrivalTime;
 	private double backEndCompletionTime;
 	private double frontEndCompletionTime;
 	private double thinkTimeCompletionTime;
@@ -11,6 +12,7 @@ public class Session {
 	public Session() {
 
 		arrivalTime = Double.MAX_VALUE;
+		lastArrivalTime = Double.MAX_VALUE;
 		backEndCompletionTime = Double.MAX_VALUE;
 		frontEndCompletionTime = Double.MAX_VALUE;
 		thinkTimeCompletionTime = Double.MAX_VALUE;
@@ -18,6 +20,14 @@ public class Session {
 		requestNumber = 0;
 		//completed = false;
 
+	}
+
+	public double getLastArrivalTime() {
+		return lastArrivalTime;
+	}
+
+	public void setLastArrivalTime(double lastArrivalTime) {
+		this.lastArrivalTime = lastArrivalTime;
 	}
 
 	public double getArrivalTime() {
