@@ -7,12 +7,13 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
-public class Simulation {
+public class dynamicSimulation {
 
 	//Constants
 	public static double start = 0;
-	public static double stop = 30000;
-	public static int runNumber = 1;
+	public static int startRunNumber=0;
+	public static int stopMaxValue=30000;
+	public static int runNumber = 250;
 	
 	public static Rngs generator;
 	public static double arrival;
@@ -44,9 +45,13 @@ public class Simulation {
 	public static PrintWriter abortedRatioWriter;
 	public static PrintWriter responseTimeWriter;
 
+	public static double[] meanThroughput = new double[runNumber];
+	public static double[] meanFeUtilization = new double[runNumber];
+	public static double[] meanBeUtilization = new double[runNumber];
+	
 	public static void main(String[] args) throws IOException {
 
-		
+		for (int stop = 0; stop < stopMaxValue; stop+=50) {
 		for (int i = 1; i <= runNumber; i++) {
 			sessionList = new ArrayList<Session>();
 			systemClock = new Clock();
@@ -94,7 +99,7 @@ public class Simulation {
 			responseTimeWriter = new PrintWriter(new BufferedWriter(
 					new FileWriter("responseTime.txt", true)));
 
-			boundSimulation();
+			boundSimulation(stop);
 			System.out.println("Round" + i + "completato");
 			if(i==runNumber)
 			{
@@ -115,12 +120,41 @@ public class Simulation {
 			dropRatioWriter.close();
 			abortedRatioWriter.close();
 			responseTimeWriter.close();
-
+			meanThroughput[i] = throughput;
+			meanFeUtilization[i] = frontEnd.getUtilization();
+			meanBeUtilization[i] = backEnd.getUtilization();
+		}
+		double throughputRes = 0;
+		double feUtilizationRes = 0;
+		double beUtilizationRes = 0;
+		for (int i = 0; i < runNumber; i++) {
+			throughputRes += meanThroughput[i];
+			feUtilizationRes += meanFeUtilization[i];
+			beUtilizationRes += meanBeUtilization[i];
+		}
+		throughputRes = throughputRes / runNumber;
+		feUtilizationRes = feUtilizationRes / runNumber;
+		beUtilizationRes = beUtilizationRes / runNumber;
+		PrintWriter throughputWriter = new PrintWriter(new BufferedWriter(
+				new FileWriter("DYNAMIC_meanThroughput.txt", true)));
+		PrintWriter feUtilizationWriter = new PrintWriter(
+				new BufferedWriter(new FileWriter("DYNAMIC_meanFeUtilization.txt",
+						true)));
+		PrintWriter beUtilizationWriter = new PrintWriter(
+				new BufferedWriter(new FileWriter("DYNAMIC_meanBeUtilization.txt",
+						true)));
+		throughputWriter.println(throughputRes);
+		throughputWriter.close();
+		feUtilizationWriter.println(feUtilizationRes);
+		feUtilizationWriter.close();
+		beUtilizationWriter.println(beUtilizationRes);
+		beUtilizationWriter.close();
+		System.out.println("Prova con stop impostato a =" + stop);
 		}
 
 	}
 
-	public static void boundSimulation() throws FileNotFoundException,
+	public static void boundSimulation(int stop) throws FileNotFoundException,
 			UnsupportedEncodingException {
 
 		generator.plantSeeds(-1);
@@ -310,172 +344,8 @@ public class Simulation {
 	}
 	
 	
-	public static void noBboundSimulation() throws FileNotFoundException,
-	UnsupportedEncodingException {
-
-generator.plantSeeds(-1);
-double nextCompletionTime = Double.MAX_VALUE;
-double nextArrivalTime = Double.MAX_VALUE;
-
-nextArrivalTime = GetArrival();
-
-while ((systemClock.getCurrent() <= stop) || (sessionList.size() > 0)) {
-
-	nextCompletionTime = GetNextCompletionTime();
-
-	if (nextCompletionTime <= nextArrivalTime) {
-		systemClock.setNext(nextCompletionTime);
-	} else {
-		systemClock.setNext(nextArrivalTime);
-	}
-
-	// -----------------------------------------CLOCK
-	System.out.println("Clock corrente =" + systemClock.getCurrent());
-	// -----------------------------------------------------------------------------------------------------
-
-	// ----------------------------TIME AVERAGE STATISTICS
-
-	if (frontEndRequestsNumber > 0) {
-		frontEnd.setAveragedPopulation(frontEnd.getAveragedPopulation()
-				+ ((systemClock.getNext() - systemClock.getCurrent()) * frontEndRequestsNumber));
-		frontEnd.setAveragePopulationInQueue(frontEnd
-				.getAveragePopulationInQueue()
-				+ ((systemClock.getNext() - systemClock.getCurrent()) * (frontEndRequestsNumber - 1)));
-
-		frontEnd.setUtilization(frontEnd.getUtilization()
-				+ ((systemClock.getNext() - systemClock.getCurrent())));
-
-	}
-
-	if (backEndRequestsNumber > 0) {
-		backEnd.setAveragedPopulation(backEnd.getAveragedPopulation()
-				+ ((systemClock.getNext() - systemClock.getCurrent()) * backEndRequestsNumber));
-		backEnd.setAveragePopulationInQueue(backEnd
-				.getAveragePopulationInQueue()
-				+ ((systemClock.getNext() - systemClock.getCurrent()) * (backEndRequestsNumber - 1)));
-		backEnd.setUtilization(backEnd.getUtilization()
-				+ ((systemClock.getNext() - systemClock.getCurrent())));
-	}
-
-	infiniteServer
-			.setUtilization(infiniteServer.getUtilization()
-					+ ((systemClock.getNext() - systemClock
-							.getCurrent()) * (sessionList.size()
-							- frontEndRequestsNumber - backEndRequestsNumber)));
-	// ---------------------------------------------------------------------------------------
-
-	systemClock.setCurrent(systemClock.getNext());
-
-	if (systemClock.getCurrent() == nextArrivalTime) {
-			arrivedSessions++;
-			frontEndRequestsNumber++;
-			Session newSession = new Session();
-			newSession.setArrivalTime(systemClock.getCurrent());
-			newSession.setLastArrivalTime(systemClock.getCurrent());
-			newSession.setRequestNumber(GetNewRequestsNumber());
-			newSession
-					.setFrontEndCompletionTime(GetMaxFrontEndCompletionTime()
-							+ GetFrontEndService());
-
-			sessionList.add(newSession);
-
-			if (systemClock.getCurrent() < stop) {
-
-				nextArrivalTime = GetArrival();
-			} else {
-				nextArrivalTime = Double.MAX_VALUE;
-
-			}
-
-	} else if (sessionList.get(currentSession) != null
-			&& systemClock.getCurrent() == sessionList.get(
-					currentSession).getFrontEndCompletionTime()) {
-		sessionList.get(currentSession).setFrontEndCompletionTime(
-				Double.MAX_VALUE);
-		sessionList.get(currentSession).setBackEndCompletionTime(
-				GetMaxBACKEndCompletionTime() + GetBackEndService());
-		frontEndRequestsNumber--;
-		backEndRequestsNumber++;
-
-		// nextCompletionTime=Double.MAX_VALUE;
-	} else if (sessionList.get(currentSession) != null
-			&& systemClock.getCurrent() == sessionList.get(
-					currentSession).getBackEndCompletionTime()) {
-		sessionList.get(currentSession).setRequestNumber(
-				sessionList.get(currentSession).getRequestNumber() - 1);
-
-		backEndRequestsNumber--;
-
-		// job average statistics: WELLFORD
-		requestResponseTime = requestResponseTime
-				+ ((systemClock.getCurrent()
-						- sessionList.get(currentSession)
-								.getLastArrivalTime() - requestResponseTime) / completedSessions);
-		// ---------------------------------------------------------------
-
-		if (sessionList.get(currentSession).getRequestNumber() == 0) {
-			completedSessions++;
-			// job average statistics: WELLFORD
-			sessionResidenceTime = sessionResidenceTime
-					+ ((systemClock.getCurrent()
-							- sessionList.get(currentSession)
-									.getArrivalTime() - sessionResidenceTime) / completedSessions);
-			// ---------------------------------------------------------------
-			sessionList.remove(currentSession);
-
-		} else {
-			sessionList.get(currentSession).setBackEndCompletionTime(
-					Double.MAX_VALUE);
-			sessionList.get(currentSession).setThinkTimeCompletionTime(
-					systemClock.getCurrent() + GetThinkTime());
-
-		}
-
-	} else if (sessionList.get(currentSession) != null
-			&& systemClock.getCurrent() == sessionList.get(
-					currentSession).getThinkTimeCompletionTime()) {
-			sessionList.get(currentSession).setThinkTimeCompletionTime(
-					Double.MAX_VALUE);
-			sessionList.get(currentSession).setFrontEndCompletionTime(
-					GetMaxFrontEndCompletionTime()
-							+ GetFrontEndService());
-			frontEndRequestsNumber++;
-			sessionList.get(currentSession).setLastArrivalTime(
-					systemClock.getCurrent());
-	}
-	System.out.println("sessioni nel sistema =" + sessionList.size());
-
-}
-
-frontEnd.setAveragePopulationInQueue(frontEnd
-		.getAveragePopulationInQueue() / systemClock.getCurrent());
-frontEnd.setUtilization(frontEnd.getUtilization()
-		/ systemClock.getCurrent());
-frontEnd.setAveragedPopulation(frontEnd.getAveragedPopulation()
-		/ systemClock.getCurrent());
-backEnd.setAveragePopulationInQueue(backEnd
-		.getAveragePopulationInQueue() / systemClock.getCurrent());
-backEnd.setUtilization(backEnd.getUtilization()
-		/ systemClock.getCurrent());
-backEnd.setAveragedPopulation(backEnd.getAveragedPopulation()
-		/ systemClock.getCurrent());
-infiniteServer.setUtilization(infiniteServer.getUtilization()
-		/ systemClock.getCurrent());
-throughput = completedSessions / systemClock.getCurrent();
-
-// -----------------write on file
-sessionAverageResidenceTimeWriter.println(sessionResidenceTime);
-
-double temp = (backEnd.getAveragedPopulation()
-		+ frontEnd.getAveragedPopulation() + infiniteServer
-		.getUtilization());
-sessionAverageInTheSystemWriter.println(temp);
-throughputWriter.println(throughput);
-feUtilizationWriter.println(frontEnd.getUtilization());
-beUtilizationWriter.println(backEnd.getUtilization());
-responseTimeWriter.println(responseTime);
-System.out.println("uscite" + completedSessions);
-}
+	
+	
 
 	public static double GetNextCompletionTime() {
 
