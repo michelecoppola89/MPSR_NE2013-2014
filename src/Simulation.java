@@ -32,7 +32,6 @@ public class Simulation {
 	public static int abortedSessions;
 	public static double dropRatio;
 	public static double abortedRatio;
-	public static double responseTime;
 	public static Statistics frontEnd;
 	public static Statistics backEnd;
 	public static Statistics infiniteServer;
@@ -60,12 +59,10 @@ public class Simulation {
 			generator = new Rngs();
 			throughput = 0.0;
 			arrival = 0;
-			// bound
 			abortedRatio = 0;
 			abortedSessions = 0;
 			droppedSessions = 0;
 			dropRatio = 0;
-			// bound fine
 			frontEnd = new Statistics(0.0, 0.0, 0.0);
 			backEnd = new Statistics(0.0, 0.0, 0.0);
 			infiniteServer = new Statistics(0.0, 0.0, 0.0);
@@ -302,7 +299,7 @@ public class Simulation {
 		throughputWriter.println(throughput);
 		feUtilizationWriter.println(frontEnd.getUtilization());
 		beUtilizationWriter.println(backEnd.getUtilization());
-		responseTimeWriter.println(responseTime);
+		responseTimeWriter.println(requestResponseTime);
 		dropRatioWriter.println(dropRatio);
 		abortedRatioWriter.println(abortedRatio);
 		System.out.println("DROP=" + droppedSessions + "/"
@@ -472,7 +469,7 @@ public class Simulation {
 		throughputWriter.println(throughput);
 		feUtilizationWriter.println(frontEnd.getUtilization());
 		beUtilizationWriter.println(backEnd.getUtilization());
-		responseTimeWriter.println(responseTime);
+		responseTimeWriter.println(requestResponseTime);
 		System.out.println("uscite" + completedSessions);
 	}
 

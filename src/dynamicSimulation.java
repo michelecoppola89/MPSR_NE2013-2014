@@ -33,7 +33,6 @@ public class dynamicSimulation {
 	public static int abortedSessions;
 	public static double dropRatio;
 	public static double abortedRatio;
-	public static double responseTime;
 	public static Statistics frontEnd;
 	public static Statistics backEnd;
 	public static Statistics infiniteServer;
@@ -338,7 +337,7 @@ public class dynamicSimulation {
 		throughputWriter.println(throughput);
 		feUtilizationWriter.println(frontEnd.getUtilization());
 		beUtilizationWriter.println(backEnd.getUtilization());
-		responseTimeWriter.println(responseTime);
+		responseTimeWriter.println(requestResponseTime);
 		dropRatioWriter.println(dropRatio);
 		abortedRatioWriter.println(abortedRatio);
 		System.out.println("DROP=" + droppedSessions + "/"
